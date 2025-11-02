@@ -1,0 +1,24 @@
+{
+  "name": "learnonauts-server",
+  "version": "1.0.0",
+  "description": "backend for the learnonauts project",
+  "main": "index.mjs",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon index.mjs",
+    "start": "node index.mjs",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.6",
+    "nodemon": "^3.1.10"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.4.1",
+    "dotenv": "^17.2.3",
+    "drizzle-orm": "^0.44.7",
+    "express": "^5.1.0"
+  }
+}
