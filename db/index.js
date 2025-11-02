@@ -1,12 +1,21 @@
-import { drizzle } from 'drizzle-orm/better-sqlite3';
-import Database from 'better-sqlite3';
-import * as schema from './schema.js';
+import "dotenv/config";
+import { drizzle } from "drizzle-orm/node-postgres";
+import pg from 'pg';
 
-// Create the SQLite database instance
-const sqlite = new Database('sqlite.db');
+const { Pool } = pg;
 
-// Create the Drizzle ORM instance
-export const db = drizzle(sqlite, { schema });
+// Parse the connection string to extract components
+const url = new URL(process.env.POSTGRES_URL);
 
-// Export the schema
-export { schema };
+const pool = new Pool({
+  user: url.username,
+  password: url.password,
+  host: url.hostname,
+  port: parseInt(url.port),
+  database: url.pathname.slice(1),
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
+
+export const db = drizzle(pool);

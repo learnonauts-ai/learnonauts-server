@@ -2,8 +2,8 @@
 export default {
   schema: './db/schema.js',
   out: './db/migrations',
-  dialect: 'sqlite',
+  dialect: 'postgresql',
   dbCredentials: {
-    url: 'sqlite.db',
+    url: process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL,
   }
 };

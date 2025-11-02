@@ -57,3 +57,18 @@ Additional verification tokens table for any extra verification needs:
 - `userId` (text, foreign key) - Reference to user
 - `expiresAt` (integer) - Token expiration
 - `createdAt` (text) - Creation timestamp
+
+## API Endpoints
+
+The user schema is used by the following API endpoints in the server:
+
+- `POST /api/register` - Create a new user account
+- `POST /api/verify-email` - Verify user's email address
+- `POST /api/login` - Authenticate user and return JWT token
+- `POST /api/forgot-password` - Initiate password reset process
+- `POST /api/reset-password` - Complete password reset with new password
+- `POST /api/update-email` - Request to update user's email address
+- `POST /api/verify-new-email` - Verify new email address
+- `GET /api/me` - Get current user's profile information
+- `PUT /api/me` - Update user's profile information
+- `POST /api/logout` - Handle user logout
