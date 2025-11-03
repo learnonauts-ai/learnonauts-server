@@ -11,15 +11,9 @@ export const users = pgTable('users', {
   age: integer('age'), // Nullable age
   resetKey: text('reset_key'), // Reset password key
   resetKeyExpires: text('reset_key_expires'), // Reset key expiration timestamp
-  emailVerified: boolean('email_verified').default(false).notNull(), // Email verification status
-  emailVerificationKey: text('email_verification_key'), // Email verification key
-  emailVerificationKeyExpires: text('email_verification_key_expires'), // Email verification key expiration
   isBanned: boolean('is_banned').default(false).notNull(), // Ban status
   lastPasswordReset: text('last_password_reset'), // Last password reset timestamp
   profilePictureUrl: text('profile_picture_url'), // Profile picture URL (stored in Supabase bucket)
-  newEmail: text('new_email'), // New email field for email changes
-  newEmailVerificationKey: text('new_email_verification_key'), // New email verification key
-  newEmailVerificationKeyExpires: text('new_email_verification_key_expires'), // New email verification key expiration
   createdAt: text('created_at')
     .default(sql`CURRENT_TIMESTAMP`)
     .notNull(),

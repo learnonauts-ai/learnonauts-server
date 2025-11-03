@@ -76,10 +76,6 @@ app.post('/api/register', async (req, res) => {
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Generate email verification key
-    const emailVerificationKey = generateRandomKey(32);
-    const emailVerificationKeyExpires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24 hours
-
     // Create user ID (using UUID-like format)
     const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
@@ -91,20 +87,15 @@ app.post('/api/register', async (req, res) => {
       displayName,
       username,
       age: age || null,
-      emailVerificationKey,
-      emailVerificationKeyExpires,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }).returning();
-
-    // In a real app, you would send an email with the verification key here
-    console.log(`Verification key for ${email}: ${emailVerificationKey}`);
 
     // Create JWT token for the new user
     const token = createToken({ id: newUser.id, email: newUser.email });
 
     res.status(201).json({
-      message: 'User registered successfully. Please verify your email.',
+      message: 'User registered successfully.',
       user: {
         id: newUser.id,
         email: newUser.email,
@@ -116,47 +107,6 @@ app.post('/api/register', async (req, res) => {
   } catch (error) {
     console.error('Registration error:', error);
     res.status(500).json({ error: 'Registration failed' });
-  }
-});
-
-// API endpoint: Email Verification
-app.post('/api/verify-email', async (req, res) => {
-  try {
-    const { verificationKey } = req.body;
-
-    if (!verificationKey) {
-      return res.status(400).json({ error: 'Verification key is required' });
-    }
-
-    // Find user with this verification key
-    const [user] = await db.select().from(users).where(eq(users.emailVerificationKey, verificationKey));
-
-    if (!user) {
-      return res.status(400).json({ error: 'Invalid verification key' });
-    }
-
-    // Check if verification key has expired
-    const now = new Date();
-    const expiresAt = new Date(user.emailVerificationKeyExpires);
-    
-    if (now > expiresAt) {
-      return res.status(400).json({ error: 'Verification key has expired' });
-    }
-
-    // Update user to mark email as verified
-    await db.update(users)
-      .set({
-        emailVerified: 1, // true in SQLite
-        emailVerificationKey: null,
-        emailVerificationKeyExpires: null,
-        updatedAt: new Date().toISOString(),
-      })
-      .where(eq(users.id, user.id));
-
-    res.status(200).json({ message: 'Email verified successfully' });
-  } catch (error) {
-    console.error('Email verification error:', error);
-    res.status(500).json({ error: 'Email verification failed' });
   }
 });
 
@@ -174,11 +124,6 @@ app.post('/api/login', async (req, res) => {
 
     if (!user) {
       return res.status(401).json({ error: 'Invalid email or password' });
-    }
-
-    // Check if email is verified
-    if (!user.emailVerified) {
-      return res.status(401).json({ error: 'Please verify your email before logging in' });
     }
 
     // Check if user is banned
@@ -314,69 +259,18 @@ app.post('/api/update-email', authenticateToken, async (req, res) => {
       return res.status(409).json({ error: 'Email already exists' });
     }
 
-    // Generate new email verification key
-    const newEmailVerificationKey = generateRandomKey(32);
-    const newEmailVerificationKeyExpires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24 hours
-
-    // Update user with new email and verification key
     await db.update(users)
       .set({
-        newEmail,
-        newEmailVerificationKey,
-        newEmailVerificationKeyExpires,
+        email: newEmail,
         updatedAt: new Date().toISOString(),
       })
       .where(eq(users.id, userId));
 
-    // In a real app, you would send an email to the new email address here
-    console.log(`New email verification key for ${newEmail}: ${newEmailVerificationKey}`);
 
-    res.status(200).json({ message: 'Verification email sent to new email address' });
+    res.status(200).json({ message: 'Email updated' });
   } catch (error) {
     console.error('Update email error:', error);
     res.status(500).json({ error: 'Failed to update email' });
-  }
-});
-
-// API endpoint: Verify New Email
-app.post('/api/verify-new-email', async (req, res) => {
-  try {
-    const { verificationKey } = req.body;
-
-    if (!verificationKey) {
-      return res.status(400).json({ error: 'Verification key is required' });
-    }
-
-    // Find user with this new email verification key
-    const [user] = await db.select().from(users).where(eq(users.newEmailVerificationKey, verificationKey));
-
-    if (!user) {
-      return res.status(400).json({ error: 'Invalid verification key' });
-    }
-
-    // Check if verification key has expired
-    const now = new Date();
-    const expiresAt = new Date(user.newEmailVerificationKeyExpires);
-    
-    if (now > expiresAt) {
-      return res.status(400).json({ error: 'Verification key has expired' });
-    }
-
-    // Update user to set the new email as the primary email
-    await db.update(users)
-      .set({
-        email: user.newEmail,
-        newEmail: null,
-        newEmailVerificationKey: null,
-        newEmailVerificationKeyExpires: null,
-        updatedAt: new Date().toISOString(),
-      })
-      .where(eq(users.id, user.id));
-
-    res.status(200).json({ message: 'Email updated successfully' });
-  } catch (error) {
-    console.error('Verify new email error:', error);
-    res.status(500).json({ error: 'Email verification failed' });
   }
 });
 
@@ -389,7 +283,6 @@ app.get('/api/me', authenticateToken, async (req, res) => {
       displayName: users.displayName,
       username: users.username,
       age: users.age,
-      emailVerified: users.emailVerified,
       isBanned: users.isBanned,
       profilePictureUrl: users.profilePictureUrl,
       createdAt: users.createdAt,
@@ -425,10 +318,6 @@ app.put('/api/me', authenticateToken, async (req, res) => {
       if (existingUser.length > 0) {
         return res.status(409).json({ error: 'Username already exists' });
       }
-      
-      if (existingUser.length > 0) {
-        return res.status(409).json({ error: 'Username already exists' });
-      }
     }
 
     // Prepare update data
@@ -450,12 +339,12 @@ app.put('/api/me', authenticateToken, async (req, res) => {
     res.status(200).json({
       message: 'Profile updated successfully',
       user: {
-        id: updatedUser[0].id,
-        email: updatedUser[0].email,
-        displayName: updatedUser[0].displayName,
-        username: updatedUser[0].username,
-        age: updatedUser[0].age,
-        profilePictureUrl: updatedUser[0].profilePictureUrl,
+        id: updatedUser.id,
+        email: updatedUser.email,
+        displayName: updatedUser.displayName,
+        username: updatedUser.username,
+        age: updatedUser.age,
+        profilePictureUrl: updatedUser.profilePictureUrl,
       }
     });
   } catch (error) {
