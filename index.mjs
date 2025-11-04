@@ -9,6 +9,7 @@ import { users } from './db/schema.js';
 import { eq, and, or, ne } from 'drizzle-orm';
 import crypto from 'crypto';
 import cors from 'cors';
+import nodemailer from 'nodemailer';
 
 const app = express();
 
@@ -24,6 +25,17 @@ const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemi
 if (!GEMINI_KEY) {
   console.warn('[warn] GEMINI_API_KEY is not set. /api/gemini will return a mock.');
 }
+
+// Create nodemailer transporter
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  port: process.env.SMTP_PORT || 587,
+  secure: false, // true for 465, false for other ports
+  auth: {
+    user: process.env.SMTP_USER || process.env.EMAIL_USER,
+    pass: process.env.SMTP_PASS || process.env.EMAIL_PASS,
+  },
+});
 
 // Utility function to generate random keys
 const generateRandomKey = (length = 32) => {
@@ -188,13 +200,80 @@ app.post('/api/forgot-password', async (req, res) => {
       })
       .where(eq(users.id, user.id));
 
-    // In a real app, you would send an email with the reset link here
-    console.log(`Password reset key for ${email}: ${resetKey}`);
+    // Get the base URL for the frontend
+    const baseUrl = process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:19006';
+    const resetUrl = `${baseUrl}/reset-password?key=${resetKey}`;
+
+    // Send password reset email
+    const mailOptions = {
+      from: process.env.SMTP_USER || process.env.EMAIL_USER,
+      to: email,
+      subject: 'Password Reset Request',
+      html: `
+        <h2>Password Reset Request</h2>
+        <p>You have requested to reset your password.</p>
+        <p>Click the link below to reset your password:</p>
+        <a href="${resetUrl}" style="display: inline-block; padding: 10px 20px; background-color: #3b82f6; color: white; text-decoration: none; border-radius: 5px;">Reset Password</a>
+        <p>This link will expire in 1 hour.</p>
+        <p>If you did not request this, please ignore this email.</p>
+      `,
+    };
+
+    // Only send email if transporter is configured
+    if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+      await transporter.sendMail(mailOptions);
+    } else {
+      console.warn('Email not sent - SMTP credentials not configured');
+      console.log(`Password reset URL for ${email}: ${resetUrl}`); // Log the URL for testing
+    }
 
     res.status(200).json({ message: 'If email exists, password reset instructions have been sent' });
   } catch (error) {
     console.error('Forgot password error:', error);
     res.status(500).json({ error: 'Request failed' });
+  }
+});
+
+// API endpoint: Verify Reset Key
+app.get('/api/verify-reset-key', async (req, res) => {
+  try {
+    const { key } = req.query;
+
+    if (!key) {
+      return res.status(400).json({ error: 'Reset key is required' });
+    }
+
+    // Find user with this reset key
+    const [user] = await db.select().from(users).where(eq(users.resetKey, key));
+
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid reset key' });
+    }
+
+    // Check if reset key has expired
+    const now = new Date();
+    const expiresAt = new Date(user.resetKeyExpires);
+    
+    if (now > expiresAt) {
+      // Clear expired reset key only when it's expired
+      await db.update(users)
+        .set({
+          resetKey: null,
+          resetKeyExpires: null,
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(users.id, user.id));
+        
+      return res.status(400).json({ error: 'Reset key has expired' });
+    }
+
+    res.status(200).json({ 
+      message: 'Valid reset key', 
+      email: user.email 
+    });
+  } catch (error) {
+    console.error('Verify reset key error:', error);
+    res.status(500).json({ error: 'Verification failed' });
   }
 });
 
