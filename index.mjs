@@ -201,7 +201,7 @@ app.post('/api/forgot-password', async (req, res) => {
       .where(eq(users.id, user.id));
 
     // Get the base URL for the frontend
-    const baseUrl = process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:19006';
+    const baseUrl = process.env.FRONTEND_URL;
     const resetUrl = `${baseUrl}/reset-password?key=${resetKey}`;
 
     // Send password reset email
