@@ -432,6 +432,63 @@ app.put('/api/me', authenticateToken, async (req, res) => {
   }
 });
 
+// API endpoint: Change Password
+app.put('/api/change-password', authenticateToken, async (req, res) => {
+  try {
+    const { oldPassword, newPassword, confirmNewPassword } = req.body;
+    const userId = req.user.id;
+
+    // Validate required fields
+    if (!oldPassword || !newPassword || !confirmNewPassword) {
+      return res.status(400).json({ error: 'Old password, new password, and confirmation are required' });
+    }
+
+    // Check if new passwords match
+    if (newPassword !== confirmNewPassword) {
+      return res.status(400).json({ error: 'New passwords do not match' });
+    }
+
+    // Validate password strength (at least 6 characters, but you can add more complex rules)
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'New password must be at least 6 characters long' });
+    }
+
+    // Get current user to check old password
+    const [user] = await db.select({
+      id: users.id,
+      hashedPassword: users.hashedPassword
+    }).from(users).where(eq(users.id, userId));
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Verify old password
+    const passwordMatch = await bcrypt.compare(oldPassword, user.hashedPassword);
+
+    if (!passwordMatch) {
+      return res.status(400).json({ error: 'Old password is incorrect' });
+    }
+
+    // Hash the new password
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update the user's password
+    await db.update(users)
+      .set({
+        hashedPassword: hashedNewPassword,
+        lastPasswordReset: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(users.id, userId));
+
+    res.status(200).json({ message: 'Password changed successfully' });
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({ error: 'Failed to change password' });
+  }
+});
+
 // API endpoint: Logout (client-side token invalidation)
 // In this implementation, logout is handled on the client side by removing the token
 // We could implement a token blacklist system, but for simplicity we'll just return success
