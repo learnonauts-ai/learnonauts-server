@@ -113,6 +113,8 @@ app.post('/api/register', async (req, res) => {
         email: newUser.email,
         displayName: newUser.displayName,
         username: newUser.username,
+        age: newUser.age,
+        profilePictureUrl: newUser.profilePictureUrl,
       },
       token
     });
@@ -160,6 +162,7 @@ app.post('/api/login', async (req, res) => {
         email: user.email,
         displayName: user.displayName,
         username: user.username,
+        age: user.age,
         profilePictureUrl: user.profilePictureUrl,
       },
       token
