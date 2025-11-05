@@ -10,8 +10,26 @@ import { eq, and, or, ne } from 'drizzle-orm';
 import crypto from 'crypto';
 import cors from 'cors';
 import nodemailer from 'nodemailer';
+import multer from 'multer';
+import { createClient } from '@supabase/supabase-js';
 
 const app = express();
+
+// Setup multer for file uploads
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Allow only image files
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'), false);
+    }
+  }
+});
 
 // Middleware
 app.use(cors());
@@ -36,6 +54,11 @@ const transporter = nodemailer.createTransport({
     pass: process.env.SMTP_PASS || process.env.EMAIL_PASS,
   },
 });
+
+// Initialize Supabase client
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
+const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
 
 // Utility function to generate random keys
 const generateRandomKey = (length = 32) => {
@@ -489,6 +512,66 @@ app.put('/api/change-password', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Change password error:', error);
     res.status(500).json({ error: 'Failed to change password' });
+  }
+});
+
+// API endpoint: Upload Profile Picture
+app.post('/api/upload-profile-picture', authenticateToken, upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image file provided' });
+    }
+
+    if (!supabase) {
+      return res.status(500).json({ error: 'Storage service not configured' });
+    }
+
+    const userId = req.user.id;
+    
+    // Generate a unique filename
+    const fileName = `profile/${userId}_${Date.now()}_${req.file.originalname}`;
+    
+    // Upload to Supabase storage
+    const { data, error } = await supabase
+      .storage
+      .from('profile')
+      .upload(fileName, req.file.buffer, {
+        contentType: req.file.mimetype,
+        upsert: true
+      });
+
+    if (error) {
+      console.error('Supabase upload error:', error);
+      return res.status(500).json({ error: 'Failed to upload image' });
+    }
+
+    // Get public URL for the uploaded image
+    const { data: publicUrlData } = supabase
+      .storage
+      .from('profile')
+      .getPublicUrl(fileName);
+
+    const imageUrl = publicUrlData?.publicUrl;
+
+    if (!imageUrl) {
+      return res.status(500).json({ error: 'Failed to get image URL' });
+    }
+
+    // Update user's profile picture URL in database
+    await db.update(users)
+      .set({
+        profilePictureUrl: imageUrl,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(users.id, userId));
+
+    res.status(200).json({ 
+      message: 'Profile picture uploaded successfully',
+      imageUrl: imageUrl 
+    });
+  } catch (error) {
+    console.error('Upload profile picture error:', error);
+    res.status(500).json({ error: 'Upload failed' });
   }
 });
 
