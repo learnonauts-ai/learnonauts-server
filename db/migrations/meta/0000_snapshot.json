@@ -1,43 +1,718 @@
 {
-  "id": "ebdeeca0-0f41-479b-9789-c19337caad81",
+  "id": "381397a7-015e-4902-979f-223a835a4b69",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "public.sessions": {
-      "name": "sessions",
+    "public.achievements": {
+      "name": "achievements",
       "schema": "",
       "columns": {
-        "id": {
-          "name": "id",
+        "user_email": {
+          "name": "user_email",
           "type": "text",
           "primaryKey": true,
           "notNull": true
         },
-        "user_id": {
-          "name": "user_id",
-          "type": "text",
+        "achievement_first_steps_unlocked": {
+          "name": "achievement_first_steps_unlocked",
+          "type": "boolean",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
-        "expires_at": {
-          "name": "expires_at",
+        "achievement_first_steps_unlocked_at": {
+          "name": "achievement_first_steps_unlocked_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "achievement_high_score_unlocked": {
+          "name": "achievement_high_score_unlocked",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "achievement_high_score_unlocked_at": {
+          "name": "achievement_high_score_unlocked_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "achievement_7_day_streak_unlocked": {
+          "name": "achievement_7_day_streak_unlocked",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "achievement_7_day_streak_unlocked_at": {
+          "name": "achievement_7_day_streak_unlocked_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "achievement_all_modules_completed_unlocked": {
+          "name": "achievement_all_modules_completed_unlocked",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "achievement_all_modules_completed_unlocked_at": {
+          "name": "achievement_all_modules_completed_unlocked_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "achievement_practice_master_unlocked": {
+          "name": "achievement_practice_master_unlocked",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "achievement_practice_master_unlocked_at": {
+          "name": "achievement_practice_master_unlocked_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "total_achievements_unlocked": {
+          "name": "total_achievements_unlocked",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false,
+          "default": 0
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "sessions_user_id_users_id_fk": {
-          "name": "sessions_user_id_users_id_fk",
-          "tableFrom": "sessions",
+        "achievements_user_email_users_email_fk": {
+          "name": "achievements_user_email_users_email_fk",
+          "tableFrom": "achievements",
           "tableTo": "users",
           "columnsFrom": [
-            "user_id"
+            "user_email"
           ],
           "columnsTo": [
-            "id"
+            "email"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.grades": {
+      "name": "grades",
+      "schema": "",
+      "columns": {
+        "user_email": {
+          "name": "user_email",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "grade_placement_test_score": {
+          "name": "grade_placement_test_score",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "grade_placement_test_recorded_at": {
+          "name": "grade_placement_test_recorded_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "grade_placement_test_attempts": {
+          "name": "grade_placement_test_attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "grade_introduction_quiz_score": {
+          "name": "grade_introduction_quiz_score",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "grade_introduction_quiz_recorded_at": {
+          "name": "grade_introduction_quiz_recorded_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "grade_regression_game_score": {
+          "name": "grade_regression_game_score",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "grade_regression_game_recorded_at": {
+          "name": "grade_regression_game_recorded_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "grade_regression_game_attempts": {
+          "name": "grade_regression_game_attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "grade_regression_game_time_spent": {
+          "name": "grade_regression_game_time_spent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "grade_clustering_game_score": {
+          "name": "grade_clustering_game_score",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "grade_clustering_game_recorded_at": {
+          "name": "grade_clustering_game_recorded_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "grade_clustering_game_attempts": {
+          "name": "grade_clustering_game_attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "grade_clustering_game_time_spent": {
+          "name": "grade_clustering_game_time_spent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "grade_neural_network_accuracy": {
+          "name": "grade_neural_network_accuracy",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "grade_neural_network_recorded_at": {
+          "name": "grade_neural_network_recorded_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "grade_training_lab_accuracy": {
+          "name": "grade_training_lab_accuracy",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "grade_training_lab_recorded_at": {
+          "name": "grade_training_lab_recorded_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "grade_training_lab_attempts": {
+          "name": "grade_training_lab_attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "grade_practice_mode_score": {
+          "name": "grade_practice_mode_score",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "grade_practice_mode_recorded_at": {
+          "name": "grade_practice_mode_recorded_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "grade_practice_mode_attempts": {
+          "name": "grade_practice_mode_attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "grade_practice_mode_time_spent": {
+          "name": "grade_practice_mode_time_spent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "grades_user_email_users_email_fk": {
+          "name": "grades_user_email_users_email_fk",
+          "tableFrom": "grades",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_email"
+          ],
+          "columnsTo": [
+            "email"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.progress": {
+      "name": "progress",
+      "schema": "",
+      "columns": {
+        "user_email": {
+          "name": "user_email",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "current_streak": {
+          "name": "current_streak",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "xp_today": {
+          "name": "xp_today",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "daily_goal": {
+          "name": "daily_goal",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 150
+        },
+        "hearts": {
+          "name": "hearts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 3
+        },
+        "coins": {
+          "name": "coins",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "total_xp_earned": {
+          "name": "total_xp_earned",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "total_time_spent": {
+          "name": "total_time_spent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "progress_placement_status": {
+          "name": "progress_placement_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "progress_placement_completed_at": {
+          "name": "progress_placement_completed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "progress_placement_attempts": {
+          "name": "progress_placement_attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "progress_placement_time_spent": {
+          "name": "progress_placement_time_spent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "progress_introduction_status": {
+          "name": "progress_introduction_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "progress_introduction_completed_at": {
+          "name": "progress_introduction_completed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "progress_introduction_attempts": {
+          "name": "progress_introduction_attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "progress_introduction_time_spent": {
+          "name": "progress_introduction_time_spent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "progress_regression_status": {
+          "name": "progress_regression_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "progress_regression_completed_at": {
+          "name": "progress_regression_completed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "progress_regression_attempts": {
+          "name": "progress_regression_attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "progress_regression_time_spent": {
+          "name": "progress_regression_time_spent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "progress_clustering_status": {
+          "name": "progress_clustering_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "progress_clustering_completed_at": {
+          "name": "progress_clustering_completed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "progress_clustering_attempts": {
+          "name": "progress_clustering_attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "progress_clustering_time_spent": {
+          "name": "progress_clustering_time_spent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "progress_neural_network_status": {
+          "name": "progress_neural_network_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "progress_neural_network_completed_at": {
+          "name": "progress_neural_network_completed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "progress_neural_network_attempts": {
+          "name": "progress_neural_network_attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "progress_neural_network_time_spent": {
+          "name": "progress_neural_network_time_spent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "progress_training_lab_status": {
+          "name": "progress_training_lab_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "progress_training_lab_completed_at": {
+          "name": "progress_training_lab_completed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "progress_training_lab_attempts": {
+          "name": "progress_training_lab_attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "progress_training_lab_time_spent": {
+          "name": "progress_training_lab_time_spent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "progress_practice_status": {
+          "name": "progress_practice_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "progress_practice_completed_at": {
+          "name": "progress_practice_completed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "progress_practice_attempts": {
+          "name": "progress_practice_attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "progress_practice_time_spent": {
+          "name": "progress_practice_time_spent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "progress_accessibility_demo_status": {
+          "name": "progress_accessibility_demo_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "progress_accessibility_demo_completed_at": {
+          "name": "progress_accessibility_demo_completed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "progress_accessibility_demo_attempts": {
+          "name": "progress_accessibility_demo_attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "progress_accessibility_demo_time_spent": {
+          "name": "progress_accessibility_demo_time_spent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "progress_user_email_users_email_fk": {
+          "name": "progress_user_email_users_email_fk",
+          "tableFrom": "progress",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_email"
+          ],
+          "columnsTo": [
+            "email"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.settings": {
+      "name": "settings",
+      "schema": "",
+      "columns": {
+        "user_email": {
+          "name": "user_email",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "font_size": {
+          "name": "font_size",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'normal'"
+        },
+        "color_theme": {
+          "name": "color_theme",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'normal'"
+        },
+        "dark_mode": {
+          "name": "dark_mode",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reduced_motion": {
+          "name": "reduced_motion",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "speech_enabled": {
+          "name": "speech_enabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "speech_speed": {
+          "name": "speech_speed",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'1.0'"
+        },
+        "speech_volume": {
+          "name": "speech_volume",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'1.0'"
+        },
+        "speech_instructions": {
+          "name": "speech_instructions",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reading_guide": {
+          "name": "reading_guide",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "text_spacing": {
+          "name": "text_spacing",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "color_overlay": {
+          "name": "color_overlay",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "break_reminders": {
+          "name": "break_reminders",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sensory_breaks": {
+          "name": "sensory_breaks",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "simplified_ui": {
+          "name": "simplified_ui",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "minimal_mode": {
+          "name": "minimal_mode",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "visible_timers": {
+          "name": "visible_timers",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sound_enabled": {
+          "name": "sound_enabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cognitive_load": {
+          "name": "cognitive_load",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "error_handling_style": {
+          "name": "error_handling_style",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "learning_style": {
+          "name": "learning_style",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "settings_user_email_users_email_fk": {
+          "name": "settings_user_email_users_email_fk",
+          "tableFrom": "settings",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_email"
+          ],
+          "columnsTo": [
+            "email"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -101,25 +776,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "email_verified": {
-          "name": "email_verified",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "email_verification_key": {
-          "name": "email_verification_key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "email_verification_key_expires": {
-          "name": "email_verification_key_expires",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
         "is_banned": {
           "name": "is_banned",
           "type": "boolean",
@@ -135,24 +791,6 @@
         },
         "profile_picture_url": {
           "name": "profile_picture_url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "new_email": {
-          "name": "new_email",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "new_email_verification_key": {
-          "name": "new_email_verification_key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "new_email_verification_key_expires": {
-          "name": "new_email_verification_key_expires",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -188,72 +826,6 @@
           "nullsNotDistinct": false,
           "columns": [
             "username"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.verification_tokens": {
-      "name": "verification_tokens",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "token": {
-          "name": "token",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "expires_at": {
-          "name": "expires_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "verification_tokens_user_id_users_id_fk": {
-          "name": "verification_tokens_user_id_users_id_fk",
-          "tableFrom": "verification_tokens",
-          "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "verification_tokens_token_unique": {
-          "name": "verification_tokens_token_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "token"
           ]
         }
       },

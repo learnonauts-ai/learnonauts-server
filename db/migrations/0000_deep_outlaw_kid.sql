@@ -1,0 +1,113 @@
+CREATE TABLE "achievements" (
+	"user_email" text PRIMARY KEY NOT NULL,
+	"achievement_first_steps_unlocked" boolean,
+	"achievement_first_steps_unlocked_at" timestamp,
+	"achievement_high_score_unlocked" boolean,
+	"achievement_high_score_unlocked_at" timestamp,
+	"achievement_7_day_streak_unlocked" boolean,
+	"achievement_7_day_streak_unlocked_at" timestamp,
+	"achievement_all_modules_completed_unlocked" boolean,
+	"achievement_all_modules_completed_unlocked_at" timestamp,
+	"achievement_practice_master_unlocked" boolean,
+	"achievement_practice_master_unlocked_at" timestamp,
+	"total_achievements_unlocked" integer DEFAULT 0
+);
+--> statement-breakpoint
+CREATE TABLE "grades" (
+	"user_email" text PRIMARY KEY NOT NULL,
+	"grade_placement_test_score" numeric,
+	"grade_placement_test_recorded_at" timestamp,
+	"grade_placement_test_attempts" integer DEFAULT 0,
+	"grade_introduction_quiz_score" numeric,
+	"grade_introduction_quiz_recorded_at" timestamp,
+	"grade_regression_game_score" numeric,
+	"grade_regression_game_recorded_at" timestamp,
+	"grade_regression_game_attempts" integer DEFAULT 0,
+	"grade_regression_game_time_spent" integer DEFAULT 0,
+	"grade_clustering_game_score" numeric,
+	"grade_clustering_game_recorded_at" timestamp,
+	"grade_clustering_game_attempts" integer DEFAULT 0,
+	"grade_clustering_game_time_spent" integer DEFAULT 0,
+	"grade_neural_network_accuracy" numeric,
+	"grade_neural_network_recorded_at" timestamp,
+	"grade_training_lab_accuracy" numeric,
+	"grade_training_lab_recorded_at" timestamp,
+	"grade_training_lab_attempts" integer DEFAULT 0,
+	"grade_practice_mode_score" numeric,
+	"grade_practice_mode_recorded_at" timestamp,
+	"grade_practice_mode_attempts" integer DEFAULT 0,
+	"grade_practice_mode_time_spent" integer DEFAULT 0
+);
+--> statement-breakpoint
+CREATE TABLE "progress" (
+	"user_email" text PRIMARY KEY NOT NULL,
+	"current_streak" integer DEFAULT 0,
+	"xp_today" integer DEFAULT 0,
+	"daily_goal" integer DEFAULT 150,
+	"hearts" integer DEFAULT 3,
+	"coins" integer DEFAULT 0,
+	"total_xp_earned" integer DEFAULT 0,
+	"total_time_spent" integer DEFAULT 0,
+	"progress_placement_status" text,
+	"progress_placement_completed_at" timestamp,
+	"progress_placement_attempts" integer DEFAULT 0,
+	"progress_placement_time_spent" integer DEFAULT 0,
+	"progress_introduction_status" text,
+	"progress_introduction_completed_at" timestamp,
+	"progress_introduction_attempts" integer DEFAULT 0,
+	"progress_introduction_time_spent" integer DEFAULT 0,
+	"progress_regression_status" text,
+	"progress_regression_completed_at" timestamp,
+	"progress_regression_attempts" integer DEFAULT 0,
+	"progress_regression_time_spent" integer DEFAULT 0,
+	"progress_clustering_status" text,
+	"progress_clustering_completed_at" timestamp,
+	"progress_clustering_attempts" integer DEFAULT 0,
+	"progress_clustering_time_spent" integer DEFAULT 0,
+	"progress_neural_network_status" text,
+	"progress_neural_network_completed_at" timestamp,
+	"progress_neural_network_attempts" integer DEFAULT 0,
+	"progress_neural_network_time_spent" integer DEFAULT 0,
+	"progress_training_lab_status" text,
+	"progress_training_lab_completed_at" timestamp,
+	"progress_training_lab_attempts" integer DEFAULT 0,
+	"progress_training_lab_time_spent" integer DEFAULT 0,
+	"progress_practice_status" text,
+	"progress_practice_completed_at" timestamp,
+	"progress_practice_attempts" integer DEFAULT 0,
+	"progress_practice_time_spent" integer DEFAULT 0,
+	"progress_accessibility_demo_status" text,
+	"progress_accessibility_demo_completed_at" timestamp,
+	"progress_accessibility_demo_attempts" integer DEFAULT 0,
+	"progress_accessibility_demo_time_spent" integer DEFAULT 0
+);
+--> statement-breakpoint
+CREATE TABLE "settings" (
+	"user_email" text PRIMARY KEY NOT NULL,
+	"font_size" text DEFAULT 'normal',
+	"color_theme" text DEFAULT 'normal',
+	"dark_mode" boolean,
+	"reduced_motion" boolean,
+	"speech_enabled" boolean,
+	"speech_speed" numeric DEFAULT '1.0',
+	"speech_volume" numeric DEFAULT '1.0',
+	"speech_instructions" boolean,
+	"reading_guide" boolean,
+	"text_spacing" text,
+	"color_overlay" text,
+	"break_reminders" boolean,
+	"sensory_breaks" boolean,
+	"simplified_ui" boolean,
+	"minimal_mode" boolean,
+	"visible_timers" boolean,
+	"sound_enabled" boolean,
+	"cognitive_load" text,
+	"error_handling_style" text,
+	"learning_style" text
+);
+
+--> statement-breakpoint
+ALTER TABLE "achievements" ADD CONSTRAINT "achievements_user_email_users_email_fk" FOREIGN KEY ("user_email") REFERENCES "public"."users"("email") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "grades" ADD CONSTRAINT "grades_user_email_users_email_fk" FOREIGN KEY ("user_email") REFERENCES "public"."users"("email") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "progress" ADD CONSTRAINT "progress_user_email_users_email_fk" FOREIGN KEY ("user_email") REFERENCES "public"."users"("email") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "settings" ADD CONSTRAINT "settings_user_email_users_email_fk" FOREIGN KEY ("user_email") REFERENCES "public"."users"("email") ON DELETE no action ON UPDATE no action;

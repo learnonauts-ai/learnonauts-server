@@ -1,4 +1,4 @@
-import { pgTable, text, integer, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, boolean, decimal, timestamp } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
 // User table with comprehensive fields for user management
@@ -22,24 +22,135 @@ export const users = pgTable('users', {
     .notNull(),
 });
 
-// Sessions table to manage user sessions
-export const sessions = pgTable('sessions', {
-  id: text('id').primaryKey(),
-  userId: text('user_id')
-    .notNull()
-    .references(() => users.id),
-  expiresAt: integer('expires_at').notNull(),
+// Settings table - stores all accessibility and UI preferences for a user
+export const settings = pgTable('settings', {
+  userEmail: text('user_email').primaryKey().notNull()
+    .references(() => users.email), // Foreign key to users.email
+  fontSize: text('font_size').default('normal'), // User's preferred font size (e.g., 'small', 'normal', 'large', 'xlarge')
+  colorTheme: text('color_theme').default('normal'), // The selected color theme (e.g., 'normal', 'high-contrast', 'warm', 'cool')
+  darkMode: boolean('dark_mode'), // true if dark mode is enabled
+  reducedMotion: boolean('reduced_motion'), // true if animations should be minimized
+  speechEnabled: boolean('speech_enabled'), // true if text-to-speech is active
+  speechSpeed: decimal('speech_speed').default('1.0'), // Narration speed for TTS (e.g., 1.0, 1.5)
+  speechVolume: decimal('speech_volume').default('1.0'), // Volume level for TTS (0.0 to 1.0)
+  speechInstructions: boolean('speech_instructions'), // true if speech instructions are enabled
+  readingGuide: boolean('reading_guide'), // true if the reading line highlight is on
+  textSpacing: text('text_spacing'), // Preference for letter/word/line spacing (e.g., 'normal', 'wide')
+  colorOverlay: text('color_overlay'), // The selected color overlay for reading (e.g., 'none', 'yellow', 'blue')
+  breakReminders: boolean('break_reminders'), // true to enable ADHD-friendly break reminders
+  sensoryBreaks: boolean('sensory_breaks'), // true to enable sensory break reminders
+  simplifiedUi: boolean('simplified_ui'), // true to reduce visual clutter
+  minimalMode: boolean('minimal_mode'), // true to enable minimal UI mode
+  visibleTimers: boolean('visible_timers'), // true if timers are visible
+  soundEnabled: boolean('sound_enabled'), // true if sound effects are enabled
+  cognitiveLoad: text('cognitive_load'), // Preferred information density (e.g., 'full', 'minimal')
+  errorHandlingStyle: text('error_handling_style'), // The style of error messages shown (e.g., 'standard', 'gentle')
+  learningStyle: text('learning_style'), // Preferred learning modality (e.g., 'visual', 'kinesthetic')
 });
 
-// Verification tokens table - keeping for any additional verification needs
-export const verificationTokens = pgTable('verification_tokens', {
-  id: text('id').primaryKey(),
-  token: text('token').notNull().unique(),
-  userId: text('user_id')
-    .notNull()
-    .references(() => users.id),
-  expiresAt: integer('expires_at').notNull(),
-  createdAt: text('created_at')
-    .default(sql`CURRENT_TIMESTAMP`)
-    .notNull(),
+// Progress table - tracks a user's completion status for all learning modules
+export const progress = pgTable('progress', {
+  userEmail: text('user_email').primaryKey().notNull()
+    .references(() => users.email), // Foreign key to users.email
+  currentStreak: integer('current_streak').default(0), // Number of consecutive days of learning
+  xpToday: integer('xp_today').default(0), // Experience points earned today
+  dailyGoal: integer('daily_goal').default(150), // User's daily XP goal
+  hearts: integer('hearts').default(3), // Number of hearts/lives remaining
+  coins: integer('coins').default(0), // Currency earned by user
+  totalXpEarned: integer('total_xp_earned').default(0), // Total experience points earned
+  totalTimeSpent: integer('total_time_spent').default(0), // Total time spent learning in seconds
+  // Placement Test Module
+  progressPlacementStatus: text('progress_placement_status'), // Status for the 'Placement Test' module (e.g., 'not-started', 'in-progress', 'completed')
+  progressPlacementCompletedAt: timestamp('progress_placement_completed_at'), // Completion timestamp for the 'Placement Test' module
+  progressPlacementAttempts: integer('progress_placement_attempts').default(0), // Number of attempts on placement test
+  progressPlacementTimeSpent: integer('progress_placement_time_spent').default(0), // Time spent on placement test in seconds
+  // Introduction/AI Fundamentals Module
+  progressIntroductionStatus: text('progress_introduction_status'), // Status for the 'AI Fundamentals' module
+  progressIntroductionCompletedAt: timestamp('progress_introduction_completed_at'), // Completion timestamp for the 'AI Fundamentals' module
+  progressIntroductionAttempts: integer('progress_introduction_attempts').default(0), // Number of attempts on introduction module
+  progressIntroductionTimeSpent: integer('progress_introduction_time_spent').default(0), // Time spent on introduction module in seconds
+  // Regression/Prediction Explorer Module
+  progressRegressionStatus: text('progress_regression_status'), // Status for the 'Prediction Explorer' module
+  progressRegressionCompletedAt: timestamp('progress_regression_completed_at'), // Completion timestamp for the 'Prediction Explorer' module
+  progressRegressionAttempts: integer('progress_regression_attempts').default(0), // Number of attempts on regression module
+  progressRegressionTimeSpent: integer('progress_regression_time_spent').default(0), // Time spent on regression module in seconds
+  // Clustering/Pattern Detective Module
+  progressClusteringStatus: text('progress_clustering_status'), // Status for the 'Pattern Detective' module
+  progressClusteringCompletedAt: timestamp('progress_clustering_completed_at'), // Completion timestamp for the 'Pattern Detective' module
+  progressClusteringAttempts: integer('progress_clustering_attempts').default(0), // Number of attempts on clustering module
+  progressClusteringTimeSpent: integer('progress_clustering_time_spent').default(0), // Time spent on clustering module in seconds
+  // Neural Network Lab Module
+  progressNeuralNetworkStatus: text('progress_neural_network_status'), // Status for the 'Neural Network Lab' module
+  progressNeuralNetworkCompletedAt: timestamp('progress_neural_network_completed_at'), // Completion timestamp for the 'Neural Network Lab' module
+  progressNeuralNetworkAttempts: integer('progress_neural_network_attempts').default(0), // Number of attempts on neural network module
+  progressNeuralNetworkTimeSpent: integer('progress_neural_network_time_spent').default(0), // Time spent on neural network module in seconds
+  // Training Lab Module
+  progressTrainingLabStatus: text('progress_training_lab_status'), // Status for the 'AI Training Lab' module
+  progressTrainingLabCompletedAt: timestamp('progress_training_lab_completed_at'), // Completion timestamp for the 'AI Training Lab' module
+  progressTrainingLabAttempts: integer('progress_training_lab_attempts').default(0), // Number of attempts on training lab module
+  progressTrainingLabTimeSpent: integer('progress_training_lab_time_spent').default(0), // Time spent on training lab module in seconds
+  // Practice Mode Module
+  progressPracticeStatus: text('progress_practice_status'), // Status for the 'Practice Mode' module
+  progressPracticeCompletedAt: timestamp('progress_practice_completed_at'), // Completion timestamp for the 'Practice Mode' module
+  progressPracticeAttempts: integer('progress_practice_attempts').default(0), // Number of attempts on practice module
+  progressPracticeTimeSpent: integer('progress_practice_time_spent').default(0), // Time spent on practice module in seconds
+  // Accessibility Demo Module
+  progressAccessibilityDemoStatus: text('progress_accessibility_demo_status'), // Status for the 'Accessibility Demo' module
+  progressAccessibilityDemoCompletedAt: timestamp('progress_accessibility_demo_completed_at'), // Completion timestamp for the 'Accessibility Demo' module
+  progressAccessibilityDemoAttempts: integer('progress_accessibility_demo_attempts').default(0), // Number of attempts on accessibility demo module
+  progressAccessibilityDemoTimeSpent: integer('progress_accessibility_demo_time_spent').default(0), // Time spent on accessibility demo module in seconds
 });
+
+// Grades table - stores scores for all specific, quantifiable activities
+export const grades = pgTable('grades', {
+  userEmail: text('user_email').primaryKey().notNull()
+    .references(() => users.email), // Foreign key to users.email
+  // Placement Test
+  gradePlacementTestScore: decimal('grade_placement_test_score'), // Score for the initial placement test
+  gradePlacementTestRecordedAt: timestamp('grade_placement_test_recorded_at'), // Timestamp when the placement test was taken
+  gradePlacementTestAttempts: integer('grade_placement_test_attempts').default(0), // Number of attempts on placement test
+  // Introduction/AI Fundamentals Quiz
+  gradeIntroductionQuizScore: decimal('grade_introduction_quiz_score'), // Score for the quiz in the 'AI Fundamentals' module
+  gradeIntroductionQuizRecordedAt: timestamp('grade_introduction_quiz_recorded_at'), // Timestamp for the AI Fundamentals quiz
+  // Regression Game
+  gradeRegressionGameScore: decimal('grade_regression_game_score'), // High score for the 'Prediction Explorer' game
+  gradeRegressionGameRecordedAt: timestamp('grade_regression_game_recorded_at'), // Timestamp for the regression game high score
+  gradeRegressionGameAttempts: integer('grade_regression_game_attempts').default(0), // Number of attempts on regression game
+  gradeRegressionGameTimeSpent: integer('grade_regression_game_time_spent').default(0), // Time spent on regression game in seconds
+  // Clustering Game
+  gradeClusteringGameScore: decimal('grade_clustering_game_score'), // High score for the 'Pattern Detective' game
+  gradeClusteringGameRecordedAt: timestamp('grade_clustering_game_recorded_at'), // Timestamp for the clustering game high score
+  gradeClusteringGameAttempts: integer('grade_clustering_game_attempts').default(0), // Number of attempts on clustering game
+  gradeClusteringGameTimeSpent: integer('grade_clustering_game_time_spent').default(0), // Time spent on clustering game in seconds
+  // Neural Network Lab
+  gradeNeuralNetworkAccuracy: decimal('grade_neural_network_accuracy'), // Best model accuracy achieved in the 'Neural Network Lab'
+  gradeNeuralNetworkRecordedAt: timestamp('grade_neural_network_recorded_at'), // Timestamp for the neural network best accuracy
+  // Training Lab
+  gradeTrainingLabAccuracy: decimal('grade_training_lab_accuracy'), // Best model accuracy achieved in the 'AI Training Lab'
+  gradeTrainingLabRecordedAt: timestamp('grade_training_lab_recorded_at'), // Timestamp for the AI training lab best accuracy
+  gradeTrainingLabAttempts: integer('grade_training_lab_attempts').default(0), // Number of attempts on training lab
+  // Practice Mode
+  gradePracticeModeScore: decimal('grade_practice_mode_score'), // Score for the 'Practice Mode'
+  gradePracticeModeRecordedAt: timestamp('grade_practice_mode_recorded_at'), // Timestamp when practice mode was completed
+  gradePracticeModeAttempts: integer('grade_practice_mode_attempts').default(0), // Number of attempts on practice mode
+  gradePracticeModeTimeSpent: integer('grade_practice_mode_time_spent').default(0), // Time spent on practice mode in seconds
+});
+
+// Achievements table - tracks user achievements and badges
+export const achievements = pgTable('achievements', {
+  userEmail: text('user_email').primaryKey().notNull()
+    .references(() => users.email), // Foreign key to users.email
+  achievementFirstStepsUnlocked: boolean('achievement_first_steps_unlocked'), // true if 'First Steps' achievement is unlocked
+  achievementFirstStepsUnlockedAt: timestamp('achievement_first_steps_unlocked_at'), // Timestamp when 'First Steps' was unlocked
+  achievementHighScoreUnlocked: boolean('achievement_high_score_unlocked'), // true if 'High Score' achievement is unlocked
+  achievementHighScoreUnlockedAt: timestamp('achievement_high_score_unlocked_at'), // Timestamp when 'High Score' was unlocked
+  achievement7DayStreakUnlocked: boolean('achievement_7_day_streak_unlocked'), // true if '7-Day Streak' achievement is unlocked
+  achievement7DayStreakUnlockedAt: timestamp('achievement_7_day_streak_unlocked_at'), // Timestamp when '7-Day Streak' was unlocked
+  achievementAllModulesCompletedUnlocked: boolean('achievement_all_modules_completed_unlocked'), // true if 'All Modules Completed' achievement is unlocked
+  achievementAllModulesCompletedUnlockedAt: timestamp('achievement_all_modules_completed_unlocked_at'), // Timestamp when 'All Modules Completed' was unlocked
+  achievementPracticeMasterUnlocked: boolean('achievement_practice_master_unlocked'), // true if 'Practice Master' achievement is unlocked
+  achievementPracticeMasterUnlockedAt: timestamp('achievement_practice_master_unlocked_at'), // Timestamp when 'Practice Master' was unlocked
+  totalAchievementsUnlocked: integer('total_achievements_unlocked').default(0), // Total number of achievements unlocked
+});
+
+
