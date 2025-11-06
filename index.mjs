@@ -58,7 +58,10 @@ const transporter = nodemailer.createTransport({
 // Initialize Supabase client
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
+console.log('Supabase URL:', supabaseUrl ? 'SET' : 'NOT SET');
+console.log('Supabase Key:', supabaseKey ? 'SET' : 'NOT SET');
 const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
+console.log('Supabase client:', supabase ? 'INITIALIZED' : 'NOT INITIALIZED');
 
 // Utility function to generate random keys
 const generateRandomKey = (length = 32) => {
@@ -515,11 +518,13 @@ app.put('/api/change-password', authenticateToken, async (req, res) => {
   }
 });
 
-// API endpoint: Upload Profile Picture
-app.post('/api/upload-profile-picture', authenticateToken, upload.single('image'), async (req, res) => {
+// API endpoint: Upload Profile Picture (accepting base64)
+app.post('/api/upload-profile-picture', authenticateToken, async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No image file provided' });
+    const { image, type, filename } = req.body;
+
+    if (!image) {
+      return res.status(400).json({ error: 'No image data provided' });
     }
 
     if (!supabase) {
@@ -528,15 +533,22 @@ app.post('/api/upload-profile-picture', authenticateToken, upload.single('image'
 
     const userId = req.user.id;
     
-    // Generate a unique filename
-    const fileName = `profile/${userId}_${Date.now()}_${req.file.originalname}`;
+    // Convert base64 to buffer
+    const imageBuffer = Buffer.from(image, 'base64');
+    
+    // Generate a unique filename if not provided
+    const safeFilename = filename || `profile-${userId}-${Date.now()}.jpg`;
+    const fileName = `profile/${userId}_${Date.now()}_${safeFilename}`;
+    
+    // Determine content type
+    const mimeType = type || 'image/jpeg';
     
     // Upload to Supabase storage
     const { data, error } = await supabase
       .storage
       .from('profile')
-      .upload(fileName, req.file.buffer, {
-        contentType: req.file.mimetype,
+      .upload(fileName, imageBuffer, {
+        contentType: mimeType,
         upsert: true
       });
 
