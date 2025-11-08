@@ -38,7 +38,7 @@ app.use(express.json({ limit: '1mb' }));
 // JWT Secret - should be in environment variables
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_jwt_secret_for_dev';
 const GEMINI_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
 if (!GEMINI_KEY) {
   console.warn('[warn] GEMINI_API_KEY is not set. /api/gemini will return a mock.');
@@ -600,26 +600,69 @@ app.post('/api/logout', authenticateToken, (req, res) => {
 app.post('/api/gemini', authenticateToken, async (req, res) => {
   try {
     const message = req.body?.message || '';
+    
+    if (!message) {
+      return res.status(400).json({ error: 'Message is required' });
+    }
+    
     if (!GEMINI_KEY) {
+      console.warn('[warn] GEMINI_API_KEY is not set. Returning mock response.');
       return res.json({ text: 'This is a mock reply. Configure GEMINI_API_KEY on the server to enable real answers.' });
     }
+    
     const body = {
-      contents: [ { role: 'user', parts: [{ text: message }] } ],
+      contents: [{ role: 'user', parts: [{ text: message }] }],
       generationConfig: { temperature: 0.7, topK: 40, topP: 0.95, maxOutputTokens: 1024 }
     };
+
+    console.log(`[info] Sending request to Gemini API with message: ${message.substring(0, 50)}...`);
+    
     const r = await fetch(`${GEMINI_URL}?key=${GEMINI_KEY}`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
     });
+    
     if (!r.ok) {
-      const err = await r.text();
-      return res.status(500).json({ error: 'Gemini request failed', detail: err });
+      const errorText = await r.text();
+      console.error(`[error] Gemini API request failed with status ${r.status}:`, errorText);
+      return res.status(500).json({ 
+        error: 'Gemini request failed', 
+        status: r.status,
+        detail: errorText 
+      });
     }
+    
     const data = await r.json();
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    console.log('[info] Gemini API response received:', JSON.stringify(data, null, 2));
+    
+    if (!data.candidates || data.candidates.length === 0) {
+      console.error('[error] No candidates returned from Gemini API:', data);
+      return res.status(500).json({ 
+        error: 'No response from Gemini API', 
+        detail: data 
+      });
+    }
+    
+    const text = data.candidates[0]?.content?.parts?.[0]?.text || '';
+    
+    if (!text) {
+      console.error('[error] No text returned from Gemini API:', data);
+      return res.status(500).json({ 
+        error: 'Empty response from Gemini API', 
+        detail: data 
+      });
+    }
+    
     return res.json({ text });
   } catch (e) {
-    console.error(e);
-    return res.status(500).json({ error: 'Server error' });
+    console.error('[error] Exception in Gemini API endpoint:', e);
+    return res.status(500).json({ 
+      error: 'Server error in Gemini API endpoint',
+      detail: e.message 
+    });
   }
 });
 
