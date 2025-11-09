@@ -597,26 +597,51 @@ app.post('/api/logout', authenticateToken, (req, res) => {
 });
 
 // Existing Gemini API endpoint
+// Existing Gemini API endpoint
 app.post('/api/gemini', authenticateToken, async (req, res) => {
   try {
     const message = req.body?.message || '';
-    
+    const history = req.body?.history || [];
+
     if (!message) {
       return res.status(400).json({ error: 'Message is required' });
     }
-    
+
     if (!GEMINI_KEY) {
       console.warn('[warn] GEMINI_API_KEY is not set. Returning mock response.');
       return res.json({ text: 'This is a mock reply. Configure GEMINI_API_KEY on the server to enable real answers.' });
     }
-    
+
+    // Convert chat history to Gemini format
+    const conversationHistory = [];
+
+    // Add historical messages to the conversation
+    for (const msg of history) {
+      if (msg.role === 'user' || msg.role === 'assistant') {
+        conversationHistory.push({
+          role: msg.role === 'assistant' ? 'model' : 'user', // ✅ FIX: Convert 'assistant' to 'model'
+          parts: [{ text: msg.text }]
+        });
+      }
+    }
+
+    // Add the current message (only if it's not already the last item in history)
+    const lastMessage = history[history.length - 1];
+    if (!lastMessage || lastMessage.text !== message) {
+      conversationHistory.push({
+        role: 'user',
+        parts: [{ text: message }]
+      });
+    }
+
     const body = {
-      contents: [{ role: 'user', parts: [{ text: message }] }],
+      contents: conversationHistory,
       generationConfig: { temperature: 0.7, topK: 40, topP: 0.95 }
     };
 
-    console.log(`[info] Sending request to Gemini API with message: ${message.substring(0, 50)}...`);
-    
+    console.log(`[info] Sending request to Gemini API with ${conversationHistory.length} messages in history`);
+    console.log(`[info] First message: ${message.substring(0, 50)}...`);
+
     const r = await fetch(`${GEMINI_URL}?key=${GEMINI_KEY}`, {
       method: 'POST',
       headers: {
@@ -624,19 +649,19 @@ app.post('/api/gemini', authenticateToken, async (req, res) => {
       },
       body: JSON.stringify(body)
     });
-    
+
     if (!r.ok) {
       const errorText = await r.text();
       console.error(`[error] Gemini API request failed with status ${r.status}:`, errorText);
-      return res.status(500).json({ 
-        error: 'Gemini request failed', 
+      return res.status(500).json({
+        error: 'Gemini request failed',
         status: r.status,
-        detail: errorText 
+        detail: errorText
       });
     }
-    
+
     const data = await r.json();
-    console.log('[info] Gemini API response received:', JSON.stringify(data, null, 2));
+    console.log('[info] Gemini API response received');
     
     if (!data.candidates || data.candidates.length === 0) {
       console.error('[error] No candidates returned from Gemini API:', data);
