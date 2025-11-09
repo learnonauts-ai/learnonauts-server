@@ -5,7 +5,7 @@ import fetch from 'node-fetch';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { db } from './db/index.js';
-import { users } from './db/schema.js';
+import { users, settings } from './db/schema.js';
 import { eq, and, or, ne } from 'drizzle-orm';
 import crypto from 'crypto';
 import cors from 'cors';
@@ -458,6 +458,133 @@ app.put('/api/me', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Update profile error:', error);
     res.status(500).json({ error: 'Failed to update profile' });
+  }
+});
+
+// API endpoint: Get User Accessibility Settings
+app.get('/api/accessibility-settings', authenticateToken, async (req, res) => {
+  try {
+    const user = req.user;
+    
+    // Get user's settings from database, creating if they don't exist
+    let [userSettings] = await db.select().from(settings).where(eq(settings.userEmail, user.email));
+    
+    if (!userSettings) {
+      // Create default settings if they don't exist
+      [userSettings] = await db.insert(settings).values({
+        userEmail: user.email,
+        fontSize: 'normal',
+        colorTheme: 'normal',
+        darkMode: false,
+        reducedMotion: false,
+        speechEnabled: false,
+        speechSpeed: 1.0,
+        speechVolume: 1.0,
+        speechInstructions: false,
+        readingGuide: false,
+        textSpacing: 'normal',
+        colorOverlay: 'none',
+        breakReminders: false,
+        sensoryBreaks: false,
+        simplifiedUi: false,
+        minimalMode: false,
+        visibleTimers: false,
+        soundEnabled: false,
+        cognitiveLoad: 'full',
+        errorHandlingStyle: 'standard',
+        learningStyle: 'visual',
+      }).returning();
+    }
+
+    res.status(200).json({ settings: userSettings });
+  } catch (error) {
+    console.error('Get accessibility settings error:', error);
+    res.status(500).json({ error: 'Failed to retrieve accessibility settings' });
+  }
+});
+
+// API endpoint: Update User Accessibility Settings
+app.put('/api/accessibility-settings', authenticateToken, async (req, res) => {
+  try {
+    const user = req.user;
+    const settingsUpdate = req.body;
+
+    // Validate that settings object is provided
+    if (!settingsUpdate || typeof settingsUpdate !== 'object') {
+      return res.status(400).json({ error: 'Settings object is required' });
+    }
+
+    // Prepare update data by mapping frontend property names to database column names
+    const updateData = {};
+    
+    // Map accessibility settings to database fields
+    if (settingsUpdate.fontSize !== undefined) updateData.fontSize = settingsUpdate.fontSize;
+    if (settingsUpdate.colorTheme !== undefined) updateData.colorTheme = settingsUpdate.colorTheme;
+    if (settingsUpdate.darkMode !== undefined) updateData.darkMode = settingsUpdate.darkMode;
+    if (settingsUpdate.reducedMotion !== undefined) updateData.reducedMotion = settingsUpdate.reducedMotion;
+    if (settingsUpdate.speechEnabled !== undefined) updateData.speechEnabled = settingsUpdate.speechEnabled;
+    if (settingsUpdate.speechSpeed !== undefined) updateData.speechSpeed = settingsUpdate.speechSpeed;
+    if (settingsUpdate.speechVolume !== undefined) updateData.speechVolume = settingsUpdate.speechVolume;
+    if (settingsUpdate.speechInstructions !== undefined) updateData.speechInstructions = settingsUpdate.speechInstructions;
+    if (settingsUpdate.readingGuide !== undefined) updateData.readingGuide = settingsUpdate.readingGuide;
+    if (settingsUpdate.textSpacing !== undefined) updateData.textSpacing = settingsUpdate.textSpacing;
+    if (settingsUpdate.colorOverlay !== undefined) updateData.colorOverlay = settingsUpdate.colorOverlay;
+    if (settingsUpdate.breakReminders !== undefined) updateData.breakReminders = settingsUpdate.breakReminders;
+    if (settingsUpdate.sensoryBreaks !== undefined) updateData.sensoryBreaks = settingsUpdate.sensoryBreaks;
+    if (settingsUpdate.simplifiedUI !== undefined) updateData.simplifiedUi = settingsUpdate.simplifiedUI;
+    if (settingsUpdate.minimalMode !== undefined) updateData.minimalMode = settingsUpdate.minimalMode;
+    if (settingsUpdate.visibleTimers !== undefined) updateData.visibleTimers = settingsUpdate.visibleTimers;
+    if (settingsUpdate.soundEnabled !== undefined) updateData.soundEnabled = settingsUpdate.soundEnabled;
+    if (settingsUpdate.cognitiveLoad !== undefined) updateData.cognitiveLoad = settingsUpdate.cognitiveLoad;
+    if (settingsUpdate.errorStyle !== undefined) updateData.errorHandlingStyle = settingsUpdate.errorStyle;
+    if (settingsUpdate.learningStyle !== undefined) updateData.learningStyle = settingsUpdate.learningStyle;
+
+    // Check if settings already exist for this user
+    const existingSettings = await db.select().from(settings).where(eq(settings.userEmail, user.email));
+
+    if (existingSettings.length > 0) {
+      // Update existing settings
+      await db.update(settings).set(updateData).where(eq(settings.userEmail, user.email));
+    } else {
+      // Create new settings with provided values and defaults for missing values
+      const finalSettings = {
+        userEmail: user.email,
+        fontSize: 'normal',
+        colorTheme: 'normal',
+        darkMode: false,
+        reducedMotion: false,
+        speechEnabled: false,
+        speechSpeed: 1.0,
+        speechVolume: 1.0,
+        speechInstructions: false,
+        readingGuide: false,
+        textSpacing: 'normal',
+        colorOverlay: 'none',
+        breakReminders: false,
+        sensoryBreaks: false,
+        simplifiedUi: false,
+        minimalMode: false,
+        visibleTimers: false,
+        soundEnabled: false,
+        cognitiveLoad: 'full',
+        errorHandlingStyle: 'standard',
+        learningStyle: 'visual',
+        ...updateData
+      };
+      
+      await db.insert(settings).values(finalSettings);
+    }
+
+    // Fetch updated settings to return to client
+    const [updatedSettings] = await db.select().from(settings).where(eq(settings.userEmail, user.email));
+
+    res.status(200).json({ 
+      message: 'Accessibility settings updated successfully', 
+      settings: updatedSettings 
+    });
+  } catch (error) {
+    console.error('Update accessibility settings error:', error);
+    res.status(500).json({ error: 'Failed to update accessibility settings' });
   }
 });
 
