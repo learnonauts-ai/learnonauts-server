@@ -462,44 +462,187 @@ app.put('/api/me', authenticateToken, async (req, res) => {
 });
 
 // API endpoint: Get User Accessibility Settings
-app.get('/api/accessibility-settings', authenticateToken, async (req, res) => {
+// API endpoint: Update User Accessibility Settings
+// API endpoint: Update User Accessibility Settings
+app.put('/api/accessibility-settings', authenticateToken, async (req, res) => {
   try {
     const user = req.user;
-    
-    // Get user's settings from database, creating if they don't exist
-    let [userSettings] = await db.select().from(settings).where(eq(settings.userEmail, user.email));
-    
-    if (!userSettings) {
-      // Create default settings if they don't exist
-      [userSettings] = await db.insert(settings).values({
-        userEmail: user.email,
-        fontSize: 'normal',
-        colorTheme: 'normal',
-        darkMode: false,
-        reducedMotion: false,
-        speechEnabled: false,
-        speechSpeed: 1.0,
-        speechVolume: 1.0,
-        speechInstructions: false,
-        readingGuide: false,
-        textSpacing: 'normal',
-        colorOverlay: 'none',
-        breakReminders: false,
-        sensoryBreaks: false,
-        simplifiedUi: false,
-        minimalMode: false,
-        visibleTimers: false,
-        soundEnabled: false,
-        cognitiveLoad: 'full',
-        errorHandlingStyle: 'standard',
-        learningStyle: 'visual',
-      }).returning();
+    const settingsUpdate = req.body;
+
+    console.log('📥 Received settings update request');
+    console.log('User:', user.email);
+    console.log('Settings received:', JSON.stringify(settingsUpdate, null, 2));
+
+    // Validate that settings object is provided
+    if (!settingsUpdate || typeof settingsUpdate !== 'object') {
+      return res.status(400).json({ error: 'Settings object is required' });
     }
 
-    res.status(200).json({ settings: userSettings });
+    // Prepare update data - handle BOTH camelCase and snake_case
+    const updateData = {};
+
+    // Comprehensive field mapping
+    const fieldMap = {
+      // Font & Display
+      'fontSize': 'font_size',
+      'font_size': 'font_size',
+      'colorTheme': 'color_theme',
+      'color_theme': 'color_theme',
+      'darkMode': 'dark_mode',
+      'dark_mode': 'dark_mode',
+
+      // Motion & Visual
+      'reducedMotion': 'reduced_motion',
+      'reduced_motion': 'reduced_motion',
+      'focusOutlines': 'focus_outlines',
+      'focus_outlines': 'focus_outlines',
+
+      // Audio & Speech
+      'speechSynthesis': 'speech_enabled',
+      'speechEnabled': 'speech_enabled',
+      'speech_enabled': 'speech_enabled',
+      'instructionsAloud': 'speech_instructions',
+      'speechInstructions': 'speech_instructions',
+      'speech_instructions': 'speech_instructions',
+      'speechSpeed': 'speech_speed',
+      'speech_speed': 'speech_speed',
+      'speechVolume': 'speech_volume',
+      'speech_volume': 'speech_volume',
+      'audioFeedback': 'sound_enabled',
+      'soundEnabled': 'sound_enabled',
+      'sound_enabled': 'sound_enabled',
+      'soundEffects': 'sound_effects',
+      'sound_effects': 'sound_effects',
+
+      // Reading & Text
+      'readingGuide': 'reading_guide',
+      'reading_guide': 'reading_guide',
+      'letterSpacing': 'text_spacing',
+      'textSpacing': 'text_spacing',
+      'text_spacing': 'text_spacing',
+      'lineHeight': 'line_height',
+      'line_height': 'line_height',
+      'wordSpacing': 'word_spacing',
+      'word_spacing': 'word_spacing',
+      'colorOverlay': 'color_overlay',
+      'color_overlay': 'color_overlay',
+
+      // Focus & Breaks
+      'breakReminders': 'break_reminders',
+      'break_reminders': 'break_reminders',
+      'sensoryBreaks': 'sensory_breaks',
+      'sensory_breaks': 'sensory_breaks',
+      'visibleTimers': 'visible_timers',
+      'visible_timers': 'visible_timers',
+      'focusSessions': 'focus_sessions',
+      'focus_sessions': 'focus_sessions',
+      'distractionReduction': 'distraction_reduction',
+      'distraction_reduction': 'distraction_reduction',
+
+      // UI Simplification
+      'simplifiedUI': 'simplified_ui',
+      'simplifiedUi': 'simplified_ui',
+      'simplified_ui': 'simplified_ui',
+      'minimalMode': 'minimal_mode',
+      'minimal_mode': 'minimal_mode',
+      'cognitiveLoad': 'cognitive_load',
+      'cognitive_load': 'cognitive_load',
+
+      // Feedback
+      'errorStyle': 'error_handling_style',
+      'errorHandlingStyle': 'error_handling_style',
+      'error_handling_style': 'error_handling_style',
+      'feedbackStyle': 'feedback_style',
+      'feedback_style': 'feedback_style',
+      'learningStyle': 'learning_style',
+      'learning_style': 'learning_style',
+    };
+
+    // Map received settings to database columns
+    for (const [receivedKey, value] of Object.entries(settingsUpdate)) {
+      const dbColumn = fieldMap[receivedKey];
+      if (dbColumn && value !== undefined) {
+        updateData[dbColumn] = value;
+      }
+    }
+
+    console.log('📊 Mapped update data:', JSON.stringify(updateData, null, 2));
+
+    // Only update if there are actual values to update
+    if (Object.keys(updateData).length === 0) {
+      console.log('⚠️ No valid fields to update');
+      // Still return current settings
+      const [currentSettings] = await db.select().from(settings).where(eq(settings.userEmail, user.email));
+      return res.status(200).json({
+        message: 'No changes to save',
+        settings: currentSettings || {}
+      });
+    }
+
+    // Check if settings already exist for this user
+    const existingSettings = await db.select().from(settings).where(eq(settings.userEmail, user.email));
+
+    if (existingSettings.length > 0) {
+      // Update existing settings
+      console.log('✏️ Updating existing settings');
+      await db.update(settings)
+        .set(updateData)
+        .where(eq(settings.userEmail, user.email));
+    } else {
+      // Create new settings with defaults
+      console.log('➕ Creating new settings');
+      const defaultSettings = {
+        user_email: user.email,
+        font_size: 'medium',
+        color_theme: 'default',
+        dark_mode: false,
+        reduced_motion: false,
+        focus_outlines: false,
+        speech_enabled: false,
+        speech_speed: '1',
+        speech_volume: '0.8',
+        speech_instructions: false,
+        sound_enabled: false,
+        sound_effects: false,
+        reading_guide: false,
+        text_spacing: 'normal',
+        line_height: 'normal',
+        word_spacing: 'normal',
+        color_overlay: 'none',
+        break_reminders: false,
+        sensory_breaks: false,
+        visible_timers: false,
+        focus_sessions: false,
+        distraction_reduction: false,
+        simplified_ui: false,
+        minimal_mode: false,
+        cognitive_load: 'full',
+        error_handling_style: 'standard',
+        feedback_style: 'mixed',
+        learning_style: 'visual',
+        ...updateData
+      };
+
+      await db.insert(settings).values(defaultSettings);
+    }
+
+    // Fetch updated settings to return (Drizzle auto-converts to camelCase)
+    const [updatedSettings] = await db.select().from(settings).where(eq(settings.userEmail, user.email));
+
+    console.log('✅ Successfully updated settings');
+    console.log('📤 Returning settings:', JSON.stringify(updatedSettings, null, 2));
+
+    res.status(200).json({
+      message: 'Accessibility settings updated successfully',
+      settings: updatedSettings
+    });
   } catch (error) {
-    console.error('Get accessibility settings error:', error);
-    res.status(500).json({ error: 'Failed to retrieve accessibility settings' });
+    console.error('❌ Update accessibility settings error:', error);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({
+      error: 'Failed to update accessibility settings',
+      details: error.message 
+    });
   }
 });
 
@@ -517,65 +660,81 @@ app.put('/api/accessibility-settings', authenticateToken, async (req, res) => {
     // Prepare update data by mapping frontend property names to database column names
     const updateData = {};
     
-    // Map accessibility settings to database fields
-    if (settingsUpdate.fontSize !== undefined) updateData.fontSize = settingsUpdate.fontSize;
-    if (settingsUpdate.colorTheme !== undefined) updateData.colorTheme = settingsUpdate.colorTheme;
-    if (settingsUpdate.darkMode !== undefined) updateData.darkMode = settingsUpdate.darkMode;
-    if (settingsUpdate.reducedMotion !== undefined) updateData.reducedMotion = settingsUpdate.reducedMotion;
-    if (settingsUpdate.speechEnabled !== undefined) updateData.speechEnabled = settingsUpdate.speechEnabled;
-    if (settingsUpdate.speechSpeed !== undefined) updateData.speechSpeed = settingsUpdate.speechSpeed;
-    if (settingsUpdate.speechVolume !== undefined) updateData.speechVolume = settingsUpdate.speechVolume;
-    if (settingsUpdate.speechInstructions !== undefined) updateData.speechInstructions = settingsUpdate.speechInstructions;
-    if (settingsUpdate.readingGuide !== undefined) updateData.readingGuide = settingsUpdate.readingGuide;
-    if (settingsUpdate.textSpacing !== undefined) updateData.textSpacing = settingsUpdate.textSpacing;
-    if (settingsUpdate.colorOverlay !== undefined) updateData.colorOverlay = settingsUpdate.colorOverlay;
-    if (settingsUpdate.breakReminders !== undefined) updateData.breakReminders = settingsUpdate.breakReminders;
-    if (settingsUpdate.sensoryBreaks !== undefined) updateData.sensoryBreaks = settingsUpdate.sensoryBreaks;
-    if (settingsUpdate.simplifiedUI !== undefined) updateData.simplifiedUi = settingsUpdate.simplifiedUI;
-    if (settingsUpdate.minimalMode !== undefined) updateData.minimalMode = settingsUpdate.minimalMode;
-    if (settingsUpdate.visibleTimers !== undefined) updateData.visibleTimers = settingsUpdate.visibleTimers;
-    if (settingsUpdate.soundEnabled !== undefined) updateData.soundEnabled = settingsUpdate.soundEnabled;
-    if (settingsUpdate.cognitiveLoad !== undefined) updateData.cognitiveLoad = settingsUpdate.cognitiveLoad;
-    if (settingsUpdate.errorStyle !== undefined) updateData.errorHandlingStyle = settingsUpdate.errorStyle;
-    if (settingsUpdate.learningStyle !== undefined) updateData.learningStyle = settingsUpdate.learningStyle;
+    // Map accessibility settings from frontend (camelCase) to database fields (snake_case)
+    if (settingsUpdate.fontSize !== undefined) updateData.font_size = settingsUpdate.fontSize;
+    if (settingsUpdate.colorTheme !== undefined) updateData.color_theme = settingsUpdate.colorTheme;
+    if (settingsUpdate.darkMode !== undefined) updateData.dark_mode = settingsUpdate.darkMode;
+    if (settingsUpdate.reducedMotion !== undefined) updateData.reduced_motion = settingsUpdate.reducedMotion;
+    if (settingsUpdate.focusOutlines !== undefined) updateData.focus_outlines = settingsUpdate.focusOutlines;
+    if (settingsUpdate.speechSynthesis !== undefined) updateData.speech_enabled = settingsUpdate.speechSynthesis;
+    if (settingsUpdate.instructionsAloud !== undefined) updateData.speech_instructions = settingsUpdate.instructionsAloud;
+    if (settingsUpdate.audioFeedback !== undefined) updateData.sound_enabled = settingsUpdate.audioFeedback;
+    if (settingsUpdate.speechSpeed !== undefined) updateData.speech_speed = settingsUpdate.speechSpeed;
+    if (settingsUpdate.speechVolume !== undefined) updateData.speech_volume = settingsUpdate.speechVolume;
+    if (settingsUpdate.soundEffects !== undefined) updateData.sound_effects = settingsUpdate.soundEffects;
+    if (settingsUpdate.readingGuide !== undefined) updateData.reading_guide = settingsUpdate.readingGuide;
+    if (settingsUpdate.letterSpacing !== undefined) updateData.letter_spacing = settingsUpdate.letterSpacing;
+    if (settingsUpdate.lineHeight !== undefined) updateData.line_height = settingsUpdate.lineHeight;
+    if (settingsUpdate.wordSpacing !== undefined) updateData.word_spacing = settingsUpdate.wordSpacing;
+    if (settingsUpdate.colorOverlay !== undefined) updateData.color_overlay = settingsUpdate.colorOverlay;
+    if (settingsUpdate.breakReminders !== undefined) updateData.break_reminders = settingsUpdate.breakReminders;
+    if (settingsUpdate.sensoryBreaks !== undefined) updateData.sensory_breaks = settingsUpdate.sensoryBreaks;
+    if (settingsUpdate.visibleTimers !== undefined) updateData.visible_timers = settingsUpdate.visibleTimers;
+    if (settingsUpdate.focusSessions !== undefined) updateData.focus_sessions = settingsUpdate.focusSessions;
+    if (settingsUpdate.distractionReduction !== undefined) updateData.distraction_reduction = settingsUpdate.distractionReduction;
+    if (settingsUpdate.simplifiedUI !== undefined) updateData.simplified_ui = settingsUpdate.simplifiedUI;
+    if (settingsUpdate.minimalMode !== undefined) updateData.minimal_mode = settingsUpdate.minimalMode;
+    if (settingsUpdate.cognitiveLoad !== undefined) updateData.cognitive_load = settingsUpdate.cognitiveLoad ? 'minimal' : 'full';
+    if (settingsUpdate.errorStyle !== undefined) updateData.error_handling_style = settingsUpdate.errorStyle;
+    if (settingsUpdate.feedbackStyle !== undefined) updateData.feedback_style = settingsUpdate.feedbackStyle;
 
-    // Check if settings already exist for this user
-    const existingSettings = await db.select().from(settings).where(eq(settings.userEmail, user.email));
+    // Only update if there are actual values to update
+    if (Object.keys(updateData).length > 0) {
+      // Check if settings already exist for this user
+      const existingSettings = await db.select().from(settings).where(eq(settings.userEmail, user.email));
 
-    if (existingSettings.length > 0) {
-      // Update existing settings
-      await db.update(settings).set(updateData).where(eq(settings.userEmail, user.email));
-    } else {
-      // Create new settings with provided values and defaults for missing values
-      const finalSettings = {
-        userEmail: user.email,
-        fontSize: 'normal',
-        colorTheme: 'normal',
-        darkMode: false,
-        reducedMotion: false,
-        speechEnabled: false,
-        speechSpeed: 1.0,
-        speechVolume: 1.0,
-        speechInstructions: false,
-        readingGuide: false,
-        textSpacing: 'normal',
-        colorOverlay: 'none',
-        breakReminders: false,
-        sensoryBreaks: false,
-        simplifiedUi: false,
-        minimalMode: false,
-        visibleTimers: false,
-        soundEnabled: false,
-        cognitiveLoad: 'full',
-        errorHandlingStyle: 'standard',
-        learningStyle: 'visual',
-        ...updateData
-      };
-      
-      await db.insert(settings).values(finalSettings);
+      if (existingSettings.length > 0) {
+        // Update existing settings
+        await db.update(settings).set(updateData).where(eq(settings.userEmail, user.email));
+      } else {
+        // Create new settings with provided values and defaults for missing values
+        const finalSettings = {
+          user_email: user.email,
+          font_size: 'normal',
+          color_theme: 'normal',
+          dark_mode: false,
+          reduced_motion: false,
+          focus_outlines: false,
+          speech_enabled: false,
+          speech_speed: 1.0,
+          speech_volume: 1.0,
+          speech_instructions: false,
+          audio_feedback: false,
+          sound_effects: false,
+          reading_guide: false,
+          text_spacing: 'normal',
+          line_height: 'normal',
+          word_spacing: 'normal',
+          color_overlay: 'none',
+          break_reminders: false,
+          sensory_breaks: false,
+          visible_timers: false,
+          focus_sessions: false,
+          distraction_reduction: false,
+          simplified_ui: false,
+          minimal_mode: false,
+          cognitive_load: 'full',
+          error_handling_style: 'standard',
+          feedback_style: 'mixed',
+          learning_style: 'visual',
+          ...updateData
+        };
+        
+        await db.insert(settings).values(finalSettings);
+      }
     }
 
-    // Fetch updated settings to return to client
+    // Fetch updated settings to return to client (whether we updated or not)
     const [updatedSettings] = await db.select().from(settings).where(eq(settings.userEmail, user.email));
 
     res.status(200).json({ 

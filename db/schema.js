@@ -30,21 +30,28 @@ export const settings = pgTable('settings', {
   colorTheme: text('color_theme').default('normal'), // The selected color theme (e.g., 'normal', 'high-contrast', 'warm', 'cool')
   darkMode: boolean('dark_mode'), // true if dark mode is enabled
   reducedMotion: boolean('reduced_motion'), // true if animations should be minimized
+  focusOutlines: boolean('focus_outlines'), // true if enhanced focus outlines are enabled
   speechEnabled: boolean('speech_enabled'), // true if text-to-speech is active
   speechSpeed: decimal('speech_speed').default('1.0'), // Narration speed for TTS (e.g., 1.0, 1.5)
   speechVolume: decimal('speech_volume').default('1.0'), // Volume level for TTS (0.0 to 1.0)
   speechInstructions: boolean('speech_instructions'), // true if speech instructions are enabled
+  audioFeedback: boolean('audio_feedback'), // true if audio feedback is enabled
+  soundEffects: boolean('sound_effects'), // true if sound effects are enabled
   readingGuide: boolean('reading_guide'), // true if the reading line highlight is on
   textSpacing: text('text_spacing'), // Preference for letter/word/line spacing (e.g., 'normal', 'wide')
+  lineHeight: text('line_height'), // Preference for line height (e.g., 'tight', 'normal', 'relaxed', 'loose')
+  wordSpacing: text('word_spacing'), // Preference for word spacing (e.g., 'tight', 'normal', 'relaxed', 'loose')
   colorOverlay: text('color_overlay'), // The selected color overlay for reading (e.g., 'none', 'yellow', 'blue')
   breakReminders: boolean('break_reminders'), // true to enable ADHD-friendly break reminders
   sensoryBreaks: boolean('sensory_breaks'), // true to enable sensory break reminders
+  visibleTimers: boolean('visible_timers'), // true if timers are visible
+  focusSessions: boolean('focus_sessions'), // true if focus sessions are enabled
+  distractionReduction: boolean('distraction_reduction'), // true if distraction reduction is enabled
   simplifiedUi: boolean('simplified_ui'), // true to reduce visual clutter
   minimalMode: boolean('minimal_mode'), // true to enable minimal UI mode
-  visibleTimers: boolean('visible_timers'), // true if timers are visible
-  soundEnabled: boolean('sound_enabled'), // true if sound effects are enabled
   cognitiveLoad: text('cognitive_load'), // Preferred information density (e.g., 'full', 'minimal')
   errorHandlingStyle: text('error_handling_style'), // The style of error messages shown (e.g., 'standard', 'gentle')
+  feedbackStyle: text('feedback_style'), // The style of feedback (e.g., 'visual', 'audio', 'mixed')
   learningStyle: text('learning_style'), // Preferred learning modality (e.g., 'visual', 'kinesthetic')
 });
 
