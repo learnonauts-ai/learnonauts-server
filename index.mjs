@@ -566,38 +566,38 @@ app.get('/api/accessibility-settings', authenticateToken, async (req, res) => {
 
     console.log('✅ Successfully fetched settings for user:', user.email);
     
-    // Add default values for any missing columns
-    const completeSettings = {
-      user_email: existingSettings?.user_email || user.email,
-      font_size: existingSettings?.font_size || 'medium',
-      color_theme: existingSettings?.color_theme || 'default',
-      dark_mode: existingSettings?.dark_mode || false,
-      reduced_motion: existingSettings?.reduced_motion || false,
-      speech_enabled: existingSettings?.speech_enabled || false,
-      speech_speed: existingSettings?.speech_speed || '1',
-      speech_volume: existingSettings?.speech_volume || '0.8',
-      speech_instructions: existingSettings?.speech_instructions || false,
-      sound_enabled: existingSettings?.sound_enabled || false,
-      reading_guide: existingSettings?.reading_guide || false,
-      text_spacing: existingSettings?.text_spacing || 'normal',
-      color_overlay: existingSettings?.color_overlay || 'none',
-      break_reminders: existingSettings?.break_reminders || false,
-      sensory_breaks: existingSettings?.sensory_breaks || false,
-      simplified_ui: existingSettings?.simplified_ui || false,
-      minimal_mode: existingSettings?.minimal_mode || false,
-      visible_timers: existingSettings?.visible_timers || false,
-      cognitive_load: existingSettings?.cognitive_load || 'full',
-      error_handling_style: existingSettings?.error_handling_style || 'standard',
-      learning_style: existingSettings?.learning_style || 'visual',
-      focus_outlines: existingSettings?.focus_outlines || false,
-      audio_feedback: existingSettings?.audio_feedback || false,
-      sound_effects: existingSettings?.sound_effects || false,
-      line_height: existingSettings?.line_height || 'normal',
-      word_spacing: existingSettings?.word_spacing || 'normal',
-      focus_sessions: existingSettings?.focus_sessions || false,
-      distraction_reduction: existingSettings?.distraction_reduction || false,
-      feedback_style: existingSettings?.feedback_style || 'mixed',
-    };
+// Add default values for any missing columns - USE CAMELCASE
+const completeSettings = {
+  userEmail: existingSettings?.userEmail || user.email,
+  fontSize: existingSettings?.fontSize || 'medium',
+  colorTheme: existingSettings?.colorTheme || 'default',
+  darkMode: existingSettings?.darkMode ?? false,
+  reducedMotion: existingSettings?.reducedMotion ?? false,
+  speechEnabled: existingSettings?.speechEnabled ?? false,
+  speechSpeed: existingSettings?.speechSpeed || '1',
+  speechVolume: existingSettings?.speechVolume || '0.8',
+  speechInstructions: existingSettings?.speechInstructions ?? false,
+  audioFeedback: existingSettings?.audioFeedback ?? false,
+  soundEffects: existingSettings?.soundEffects ?? false,
+  readingGuide: existingSettings?.readingGuide ?? false,
+  textSpacing: existingSettings?.textSpacing || 'normal',
+  colorOverlay: existingSettings?.colorOverlay || 'none',
+  breakReminders: existingSettings?.breakReminders ?? false,
+  sensoryBreaks: existingSettings?.sensoryBreaks ?? false,
+  simplifiedUi: existingSettings?.simplifiedUi ?? false,
+  minimalMode: existingSettings?.minimalMode ?? false,
+  visibleTimers: existingSettings?.visibleTimers ?? false,
+  cognitiveLoad: existingSettings?.cognitiveLoad || 'full',
+  errorHandlingStyle: existingSettings?.errorHandlingStyle || 'standard',
+  learningStyle: existingSettings?.learningStyle || 'visual',
+  focusOutlines: existingSettings?.focusOutlines ?? false,
+  soundEnabled: existingSettings?.audioFeedback ?? false, // Map audioFeedback to soundEnabled for frontend
+  lineHeight: existingSettings?.lineHeight || 'normal',
+  wordSpacing: existingSettings?.wordSpacing || 'normal',
+  focusSessions: existingSettings?.focusSessions ?? false,
+  distractionReduction: existingSettings?.distractionReduction ?? false,
+  feedbackStyle: existingSettings?.feedbackStyle || 'mixed',
+};
 
     console.log('📤 Returning settings:', JSON.stringify(completeSettings, null, 2));
 
