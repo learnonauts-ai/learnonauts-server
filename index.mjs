@@ -678,254 +678,202 @@ app.put('/api/accessibility-settings', authenticateToken, async (req, res) => {
     console.log('User:', user.email);
     console.log('Settings received:', JSON.stringify(settingsUpdate, null, 2));
 
-    // Validate that settings object is provided
+    // 1) Validate incoming body
     if (!settingsUpdate || typeof settingsUpdate !== 'object') {
       return res.status(400).json({ error: 'Settings object is required' });
     }
 
-    // Prepare update data - handle BOTH camelCase and snake_case
+    // 2) Build updateData from known keys only
     const updateData = {};
 
-    // Comprehensive field mapping
     const fieldMap = {
       // Font & Display
-      'fontSize': 'font_size',
-      'font_size': 'font_size',
-      'colorTheme': 'color_theme',
-      'color_theme': 'color_theme',
-      'darkMode': 'dark_mode',
-      'dark_mode': 'dark_mode',
+      fontSize: 'font_size',
+      font_size: 'font_size',
+      colorTheme: 'color_theme',
+      color_theme: 'color_theme',
+      darkMode: 'dark_mode',
+      dark_mode: 'dark_mode',
 
       // Motion & Visual
-      'reducedMotion': 'reduced_motion',
-      'reduced_motion': 'reduced_motion',
-      'focusOutlines': 'focus_outlines',
-      'focus_outlines': 'focus_outlines',
+      reducedMotion: 'reduced_motion',
+      reduced_motion: 'reduced_motion',
+      focusOutlines: 'focus_outlines',
+      focus_outlines: 'focus_outlines',
 
       // Audio & Speech
-      'speechSynthesis': 'speech_enabled',
-      'speechEnabled': 'speech_enabled',
-      'speech_enabled': 'speech_enabled',
-      'instructionsAloud': 'speech_instructions',
-      'speechInstructions': 'speech_instructions',
-      'speech_instructions': 'speech_instructions',
-      'speechSpeed': 'speech_speed',
-      'speech_speed': 'speech_speed',
-      'speechVolume': 'speech_volume',
-      'speech_volume': 'speech_volume',
-      'audioFeedback': 'sound_enabled',
-      'soundEnabled': 'sound_enabled',
-      'sound_enabled': 'sound_enabled',
-      'soundEffects': 'sound_effects',
-      'sound_effects': 'sound_effects',
+      speechSynthesis: 'speech_enabled',
+      speechEnabled: 'speech_enabled',
+      speech_enabled: 'speech_enabled',
+      instructionsAloud: 'speech_instructions',
+      speechInstructions: 'speech_instructions',
+      speech_instructions: 'speech_instructions',
+      speechSpeed: 'speech_speed',
+      speech_speed: 'speech_speed',
+      speechVolume: 'speech_volume',
+      speech_volume: 'speech_volume',
+      audioFeedback: 'audio_feedback',
+      audio_feedback: 'audio_feedback',
+      soundEffects: 'sound_effects',
+      sound_effects: 'sound_effects',
 
       // Reading & Text
-      'readingGuide': 'reading_guide',
-      'reading_guide': 'reading_guide',
-      'letterSpacing': 'text_spacing',
-      'textSpacing': 'text_spacing',
-      'text_spacing': 'text_spacing',
-      'lineHeight': 'line_height',
-      'line_height': 'line_height',
-      'wordSpacing': 'word_spacing',
-      'word_spacing': 'word_spacing',
-      'colorOverlay': 'color_overlay',
-      'color_overlay': 'color_overlay',
+      readingGuide: 'reading_guide',
+      reading_guide: 'reading_guide',
+      letterSpacing: 'text_spacing',
+      textSpacing: 'text_spacing',
+      text_spacing: 'text_spacing',
+      lineHeight: 'line_height',
+      line_height: 'line_height',
+      wordSpacing: 'word_spacing',
+      word_spacing: 'word_spacing',
+      colorOverlay: 'color_overlay',
+      color_overlay: 'color_overlay',
 
       // Focus & Breaks
-      'breakReminders': 'break_reminders',
-      'break_reminders': 'break_reminders',
-      'sensoryBreaks': 'sensory_breaks',
-      'sensory_breaks': 'sensory_breaks',
-      'visibleTimers': 'visible_timers',
-      'visible_timers': 'visible_timers',
-      'focusSessions': 'focus_sessions',
-      'focus_sessions': 'focus_sessions',
-      'distractionReduction': 'distraction_reduction',
-      'distraction_reduction': 'distraction_reduction',
+      breakReminders: 'break_reminders',
+      break_reminders: 'break_reminders',
+      sensoryBreaks: 'sensory_breaks',
+      sensory_breaks: 'sensory_breaks',
+      visibleTimers: 'visible_timers',
+      visible_timers: 'visible_timers',
+      focusSessions: 'focus_sessions',
+      focus_sessions: 'focus_sessions',
+      distractionReduction: 'distraction_reduction',
+      distraction_reduction: 'distraction_reduction',
 
       // UI Simplification
-      'simplifiedUI': 'simplified_ui',
-      'simplifiedUi': 'simplified_ui',
-      'simplified_ui': 'simplified_ui',
-      'minimalMode': 'minimal_mode',
-      'minimal_mode': 'minimal_mode',
-      'cognitiveLoad': 'cognitive_load',
-      'cognitive_load': 'cognitive_load',
+      simplifiedUI: 'simplified_ui',
+      simplifiedUi: 'simplified_ui',
+      simplified_ui: 'simplified_ui',
+      minimalMode: 'minimal_mode',
+      minimal_mode: 'minimal_mode',
+      cognitiveLoad: 'cognitive_load',
+      cognitive_load: 'cognitive_load',
 
       // Feedback
-      'errorStyle': 'error_handling_style',
-      'errorHandlingStyle': 'error_handling_style',
-      'error_handling_style': 'error_handling_style',
-      'feedbackStyle': 'feedback_style',
-      'feedback_style': 'feedback_style',
-      'learningStyle': 'learning_style',
-      'learning_style': 'learning_style',
+      errorStyle: 'error_handling_style',
+      errorHandlingStyle: 'error_handling_style',
+      error_handling_style: 'error_handling_style',
+      feedbackStyle: 'feedback_style',
+      feedback_style: 'feedback_style',
+      learningStyle: 'learning_style',
+      learning_style: 'learning_style',
     };
 
-    // Map received settings to database columns
-    for (const [receivedKey, value] of Object.entries(settingsUpdate)) {
-      const dbColumn = fieldMap[receivedKey];
-      if (dbColumn && value !== undefined) {
-        updateData[dbColumn] = value;
-      }
-    }
+for (const [receivedKey, value] of Object.entries(settingsUpdate)) {
+  const dbColumn = fieldMap[receivedKey];
+  if (!dbColumn) continue;
+
+  // Convert snake_case to camelCase for Drizzle
+  const camelCaseKey = dbColumn.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+
+  if (dbColumn === 'cognitive_load' && typeof value === 'boolean') {
+    updateData[camelCaseKey] = value ? 'full' : 'minimal';
+  } else if (dbColumn === 'speech_speed' || dbColumn === 'speech_volume') {
+    updateData[camelCaseKey] = String(value);
+  } else {
+    updateData[camelCaseKey] = value;
+  }
+}
+// ADD THIS DEBUG
+console.log('🔍 DEBUG: updateData keys:', Object.keys(updateData));
+console.log('🔍 DEBUG: updateData:', updateData);
+console.log('🔍 DEBUG: settingsUpdate keys:', Object.keys(settingsUpdate));
 
     console.log('📊 Mapped update data:', JSON.stringify(updateData, null, 2));
 
-    // Only update if there are actual values to update
+    // 3) HARD GUARD: if nothing to update, do NOT hit .update()
     if (Object.keys(updateData).length === 0) {
-      console.log('⚠️ No valid fields to update');
-      // Still return current settings
-      const [currentSettings] = await db.select().from(settings).where(eq(settings.userEmail, user.email));
+      console.log('⚠️ No valid fields to update (will NOT call update)');
+      const [currentSettings] = await db
+        .select()
+        .from(settings)
+        .where(eq(settings.userEmail, user.email));
+
       return res.status(200).json({
         message: 'No changes to save',
-        settings: currentSettings || {}
+        settings: currentSettings || {},
       });
     }
 
-    // Define which settings columns exist in the database (based on initial migration)
-    // Columns that were added in later migrations (0001_add_missing_accessibility_settings.sql) 
-    // will not exist if the migration wasn't run
-    const existingDBColumns = [
-      'user_email', 'font_size', 'color_theme', 'dark_mode', 'reduced_motion',
-      'speech_enabled', 'speech_speed', 'speech_volume', 'speech_instructions',
-      'reading_guide', 'text_spacing', 'color_overlay', 'break_reminders',
-      'sensory_breaks', 'simplified_ui', 'minimal_mode', 'visible_timers',
-      'sound_enabled', 'cognitive_load', 'error_handling_style', 'learning_style'
-    ];
-    
-    const newColumns = [
-      'focus_outlines', 'audio_feedback', 'sound_effects', 'line_height',
-      'word_spacing', 'focus_sessions', 'distraction_reduction', 'feedback_style'
-    ];
+    // 4) Check if a row exists for this user
+    const [existingSettings] = await db
+      .select()
+      .from(settings)
+      .where(eq(settings.userEmail, user.email));
 
-    // Separate the update data into existing and missing columns
-    const existingColumnsData = {};
-    const missingColumnsData = {};
-    
-    for (const [key, value] of Object.entries(updateData)) {
-      if (existingDBColumns.includes(key)) {
-        existingColumnsData[key] = value;
-      } else if (newColumns.includes(key)) {
-        // These columns may not exist in the database if the migration wasn't run
-        missingColumnsData[key] = value;
-      }
+    if (existingSettings) {
+      console.log('✏️ Updating existing settings with:', updateData);
+      await db
+        .update(settings)
+        .set(updateData)
+        .where(eq(settings.userEmail, user.email));
+    } else {
+      console.log('➕ Creating new settings row');
+
+      const newSettings = {
+        userEmail: user.email,          // use camelCase property name per schema
+        fontSize: 'medium',
+        colorTheme: 'default',
+        darkMode: false,
+        reducedMotion: false,
+        focusOutlines: false,
+        speechEnabled: false,
+        speechSpeed: '1',
+        speechVolume: '0.8',
+        speechInstructions: false,
+        audioFeedback: false,
+        soundEffects: false,
+        readingGuide: false,
+        textSpacing: 'normal',
+        lineHeight: 'normal',
+        wordSpacing: 'normal',
+        colorOverlay: 'none',
+        breakReminders: false,
+        sensoryBreaks: false,
+        visibleTimers: false,
+        focusSessions: false,
+        distractionReduction: false,
+        simplifiedUi: false,
+        minimalMode: false,
+        cognitiveLoad: 'full',
+        errorHandlingStyle: 'standard',
+        feedbackStyle: 'mixed',
+        learningStyle: 'visual',
+        ...updateData,
+      };
+
+      await db.insert(settings).values(newSettings);
     }
 
-    // Check if settings already exist for this user
-    const existingSettings = [];
-    try {
-      // Use raw SQL to query only the existing columns to avoid errors from missing columns
-      const result = await db.execute(
-        db.sql`SELECT user_email, font_size, color_theme, dark_mode, reduced_motion, 
-               speech_enabled, speech_speed, speech_volume, speech_instructions,
-               reading_guide, text_spacing, color_overlay, break_reminders,
-               sensory_breaks, simplified_ui, minimal_mode, visible_timers,
-               sound_enabled, cognitive_load, error_handling_style, learning_style
-               FROM settings WHERE user_email = ${user.email}`
-      );
-      
-      if (result.rows.length > 0) {
-        existingSettings.push(result.rows[0]);
-      }
-    } catch (selectError) {
-      console.warn('⚠️ Warning: Could not check existing settings (database may need migration)');
-    }
-
-    try {
-      if (existingSettings.length > 0) {
-        // Update existing settings - only update columns that definitely exist
-        if (Object.keys(existingColumnsData).length > 0) {
-          console.log('✏️ Updating existing settings with known columns:', Object.keys(existingColumnsData));
-          await db.update(settings)
-            .set(existingColumnsData)
-            .where(eq(settings.userEmail, user.email));
-        }
-        
-        // For missing columns, we'll track them but can't store them until migration is run
-        if (Object.keys(missingColumnsData).length > 0) {
-          console.warn('⚠️ Warning: Some settings require database migration to be stored:', Object.keys(missingColumnsData));
-          // Combine with existingColumnsData for response
-          Object.assign(updateData, missingColumnsData);
-        }
-      } else {
-        // Create new settings with defaults - only include columns that exist
-        console.log('➕ Creating new settings with known columns');
-        
-        // Only use the initial columns plus any values from the request that exist in initial columns
-        const defaultSettings = {
-          user_email: user.email,
-          font_size: 'medium',
-          color_theme: 'default',
-          dark_mode: false,
-          reduced_motion: false,
-          speech_enabled: false,
-          speech_speed: '1',
-          speech_volume: '0.8',
-          speech_instructions: false,
-          sound_enabled: false,
-          reading_guide: false,
-          text_spacing: 'normal',
-          color_overlay: 'none',
-          break_reminders: false,
-          sensory_breaks: false,
-          simplified_ui: false,
-          minimal_mode: false,
-          visible_timers: false,
-          cognitive_load: 'full',
-          error_handling_style: 'standard',
-          learning_style: 'visual',
-          ...existingColumnsData  // Use only the existing columns from the request
-        };
-
-        await db.insert(settings).values(defaultSettings);
-      }
-    } catch (dbOperationError) {
-      console.warn('⚠️ Database operation failed (likely due to missing columns):', dbOperationError.message);
-      console.warn('⚠️ This suggests database migrations need to be run');
-      
-      // Try to continue without the database operation
-      // We'll still return the settings that were requested to be updated
-    }
-
-    // For now, just return a successful response without trying to fetch the settings
-    // that might have missing columns in the database
-    const responseSettings = {
-      userEmail: user.email,
-      ...updateData  // Include the values that were requested to be updated
-    };
+    // 5) Return the updated row
+    const [updatedSettings] = await db
+      .select()
+      .from(settings)
+      .where(eq(settings.userEmail, user.email));
 
     console.log('✅ Successfully processed settings update');
-    console.log('📤 Returning settings:', JSON.stringify(responseSettings, null, 2));
+    console.log('📤 Returning settings:', JSON.stringify(updatedSettings, null, 2));
 
     res.status(200).json({
-      message: 'Accessibility settings updated successfully (note: some settings may require database migration to be stored persistently)',
-      settings: responseSettings
+      message: 'Accessibility settings updated successfully',
+      settings: updatedSettings,
     });
   } catch (error) {
     console.error('❌ Update accessibility settings error:', error);
     console.error('Error stack:', error.stack);
-    
-    // Check if the error is due to a missing column in the database
-    if (error.message && error.message.includes('column') && error.message.includes('does not exist')) {
-      // If there's a missing column error, we need to handle it gracefully
-      // The proper solution is to run the database migrations to add the missing columns
-      console.error('⚠️ Database column missing - please run database migrations to add missing accessibility settings columns.');
-      
-      // For now, let's provide a more helpful error message to the user
-      res.status(500).json({
-        error: 'Database configuration issue: Required setting columns are missing. Please contact the administrator to run database migrations.',
-        details: 'Missing database column. Run "npm run db:migrate" to add missing columns.'
-      });
-    } else {
-      res.status(500).json({
-        error: 'Failed to update accessibility settings',
-        details: error.message 
-      });
-    }
+
+    res.status(500).json({
+      error: 'Failed to update accessibility settings',
+      details: error.message,
+    });
   }
 });
+
+
+
+
 
 
 

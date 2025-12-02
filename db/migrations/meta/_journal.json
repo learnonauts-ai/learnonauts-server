@@ -15,6 +15,13 @@
       "when": 1763215311291,
       "tag": "0001_messy_franklin_richards",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1764632068249,
+      "tag": "0002_shallow_blue_shield",
+      "breakpoints": true
     }
   ]
 }
